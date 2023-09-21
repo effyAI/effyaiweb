@@ -5,14 +5,14 @@ app = Flask(__name__)
 api = Api(app)
 
 @app.route('/')
-def index():
+def home():
     return render_template('index.html')
 
-class Hello(Resource):
-    def get(self):
-        return {"response":"Hello"}
+@app.route('/hello')
+def hello():
+    return {"response":"Hello"}  
 
-api.add_resource(Hello,"/hello")        
+
 
 if __name__ == "__main__":
     app.run()
