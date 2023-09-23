@@ -5,14 +5,14 @@ import shutil
 import sys
 
 class Audio_split():
-    def splitter(self, audio, split_sec = 8) -> str:
+    def splitter(self, audio_path, out_path, split_sec = 8) -> str:
         '''Will return split audio path'''
         import librosa
         import soundfile as sf
         import os
 
-        out_path = 'dataset_raw/sp1'
-        file_path = audio
+        out_path = os.path.join(out_path,'dataset_raw/sp1')
+        file_path = audio_path
         min_split_sec = split_sec # range min_split_sec - till word complete
 
 
@@ -71,12 +71,12 @@ class TestMain():
         import so_vits_svc_fork.preprocessing.preprocess_split 
         import so_vits_svc_fork.train
 
-    def preprocess(self):
+    def preprocess(self, base_path):
         from so_vits_svc_fork.preprocessing.preprocess_resample import (
             preprocess_resample,
         )
         preprocess_resample(
-            "dataset_raw", "dataset/44k", 44100, n_jobs=-1 # tunable
+            os.path.join(base_path,"dataset_raw"),os.path.join(base_path,"dataset/44k"), 44100, n_jobs=-1 # tunable
         )
 
         from so_vits_svc_fork.preprocessing.preprocess_flist_config import (
@@ -84,11 +84,11 @@ class TestMain():
         )
 
         preprocess_config(
-            "dataset/44k",
-            "filelists/train.txt",
-            "filelists/val.txt",
-            "filelists/test.txt",
-            "configs/44k/config.json",
+            os.path.join(base_path,"dataset/44k"),
+            os.path.join(base_path,"filelists/train.txt"),
+            os.path.join(base_path,"filelists/val.txt"),
+            os.path.join(base_path,"filelists/test.txt"),
+            os.path.join(base_path,"configs/44k/config.json"),
             "so-vits-svc-4.0v1",
         )
 
@@ -97,30 +97,39 @@ class TestMain():
             preprocess_hubert_f0,
         )
 
-        preprocess_hubert_f0("dataset/44k", "configs/44k/config.json")
+        preprocess_hubert_f0(os.path.join(base_path,"dataset/44k"), os.path.join(base_path,"configs/44k/config.json"))
 
-        if not os.path.exists('logs/44k'):
-            os.makedirs('logs/44k')
+        if not os.path.exists(os.path.join(base_path,'logs/44k')):
+            os.makedirs(os.path.join(base_path,'logs/44k'))
 
-        shutil.copy('configs/44k/config.json', 'logs/44k/config.json')
+        shutil.copy(os.path.join(base_path,'configs/44k/config.json'), os.path.join(base_path,'logs/44k/config.json'))
 
-    def train(self, epochs=1000, eval_interval=500):
+    def train(self, base_path, epochs=1000, eval_interval=500):
 
         from so_vits_svc_fork.train import train
 
-        config_path = Path("logs/44k/config.json")
+        print("In train", base_path,"logs/44k/config.json")
+
+        config_path = Path(os.path.join(base_path,"logs/44k/config.json"))
         config_json = json.loads(config_path.read_text("utf-8"))
         config_json["train"]["epochs"] = epochs
         config_json["train"]["eval_interval"] = eval_interval
+        config_json["train"]["batch_size"] = 10 # default 16
 
         config_path.write_text(json.dumps(config_json), "utf-8")
 
         prog = {"Progress":0}
-        prog_file = os.getcwd()+'/'+'train_progress.json' 
+        prog_file = os.path.join(base_path,'train_progress.json') 
         with open(prog_file,'w') as f:
             json.dump(prog, fp=f)
         # print("---------------------------------",prog_file)
-        train(config_path, "logs/44k", prog_file)
+        # Coping base .pth file
+        BASE_PTH_FILE_PATH = '/home/infinity/Desktop/Effy_Internship/effyaiweb/pre_train_pth' # hard coded path need to improve
+        
+        for file in os.listdir(BASE_PTH_FILE_PATH):
+            if file.endswith('.pth'):
+                shutil.copy(os.path.join(BASE_PTH_FILE_PATH,file), os.path.join(base_path,'logs/44k/'))
+        train(config_path, os.path.join(base_path,"logs/44k"), prog_file)
     
     
     def infer(self):
