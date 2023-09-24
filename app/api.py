@@ -12,7 +12,6 @@ import shutil
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///corpus_data.db'
 db.init_app(app)
-api = Api(app)
 
 # Create the tables (run only once when the app starts)
 with app.app_context():
@@ -140,6 +139,5 @@ def fetch_corpus_data_by_id(id):
 
     return jsonify(data)
 
-
 if __name__ == "__main__":
-    app.run()
+    app.run(debug = True, port=5000)
