@@ -2,6 +2,7 @@ flask
 requests
 flask-RESTful
 boto3
+flask_sqlalchemy
 Pillow
 cmake
 dlib
