@@ -1,5 +1,5 @@
 face_aging_ai
-app/src/.idea
-app/src/.DS_Store
-app/src/pretrained_models/*
-app/src/__pycache__
+/app/src/.idea
+/app/src/.DS_Store
+/app/src/pretrained_models
+*.__pycache__

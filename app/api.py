@@ -8,8 +8,8 @@ from flask_restful import Api
 # sys.path.append('/home/ubuntu/effyaiweb/src')
 from src.get_aging_video import age_input
 import boto3
-from app.database import db
-from app.models import CorpusData
+from database import db
+from models import CorpusData
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///corpus_data.db'
