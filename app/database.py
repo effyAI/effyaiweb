@@ -1,7 +1,7 @@
 # database.py
-
 from flask_sqlalchemy import SQLAlchemy
 import boto3
+
 db = SQLAlchemy()
 
 

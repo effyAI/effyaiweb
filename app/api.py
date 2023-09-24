@@ -5,10 +5,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
 # import sys
 # sys.path.append('/home/ubuntu/effyaiweb/src')
-from src.get_aging_video import age_input
+
 import boto3
 from database import db
 from models import CorpusData
+from app.cors_config import configure_cors
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'the quick brown fox jumps over the lazy   dog'
