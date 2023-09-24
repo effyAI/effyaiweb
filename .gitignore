@@ -1,1 +1,3 @@
-venv
+face_aging_ai
+# app/src/pretrained_models/*
+*.__pycache__

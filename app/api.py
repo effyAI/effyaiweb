@@ -4,10 +4,12 @@ from decimal import Decimal
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Api
+# import sys
+# sys.path.append('/home/ubuntu/effyaiweb/src')
+from src.get_aging_video import age_input
 import boto3
-from app.database import db
-from app.models import CorpusData
-import shutil
+from database import db
+from models import CorpusData
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///corpus_data.db'
@@ -136,8 +138,16 @@ def fetch_corpus_data_by_id(id):
         'ClosingBalance': corpus_data.closing_balance,
         's3_url': corpus_data.image_url
     }
-
     return jsonify(data)
+
+@app.route('/get_aging_video', methods=['GET'])
+def get_aging_video():
+    # data = request.get_json()
+    input_img = 'https://i.pinimg.com/736x/ad/b4/60/adb4602cbd454354e71b5f214fb4e0ec.jpg'
+    currentAge = 25
+    retirementAge = 80
+    res = age_input(input_img, currentAge, retirementAge)
+    return res
 
 if __name__ == "__main__":
     app.run(debug = True, port=5000)
