@@ -1,4 +1,4 @@
 face_aging_ai
-src/.idea
-src/.DS_Store
-src/pretrained_models/*
+app/src/.idea
+app/src/.DS_Store
+app/src/pretrained_models/*
