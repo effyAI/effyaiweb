@@ -3,14 +3,18 @@ from decimal import Decimal
 
 from flask import Flask, render_template, request, jsonify
 from flask_restful import Api
+# import sys
+# sys.path.append('/home/ubuntu/effyaiweb/src')
+from src.get_aging_video import age_input
+import subprocess
 
 app = Flask(__name__)
 api = Api(app)
 
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# @app.route('/')
+# def home():
+#     return render_template('index.html')
 
 
 @app.route('/hello')
@@ -62,5 +66,13 @@ def calculate_sip():
     return jsonify({'MonthlySIP': Decimal(MonthlySIP), 'ClosingBalance': closingBalances})
 
 
+@app.route('/', methods=['GET'])
+def get_aging_video():
+    # data = request.get_json()
+    currentAge = 25
+    retirementAge = 80
+    res = age_input('/home/ubuntu/effyaiweb/app/src/input/001.jpg', '/home/ubuntu/effyaiweb/app/src/output_video', currentAge, retirementAge)
+    return res
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
