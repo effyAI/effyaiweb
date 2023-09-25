@@ -48,7 +48,10 @@ class CloneAudio(Resource):
             # print(rmf, os.path.join(BASE_PROJECT_FOLDER,rmf))
             if os.path.exists(os.path.join(BASE_PROJECT_FOLDER,rmf)):
                 print('[+] Cleaning - {}'.format(os.path.join(BASE_PROJECT_FOLDER,rmf)))
-                shutil.rmtree(os.path.join(BASE_PROJECT_FOLDER,rmf))
+                if rmf.endswith('.json'):
+                    os.remove(os.path.join(BASE_PROJECT_FOLDER,rmf))
+                else:
+                    shutil.rmtree(os.path.join(BASE_PROJECT_FOLDER,rmf))
         
 
         BASE_CLONE_FOLDER = os.path.join(BASE_PROJECT_FOLDER,'VoiceToClone')

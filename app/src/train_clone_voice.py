@@ -134,6 +134,11 @@ class TestMain():
 
         # Upload to aws s3
         aws = AwsBackNFro()
+        
+        print("Uploading")
+        save_path_aws = '/'.join(base_path.split('/')[:-3])
+        aws.upload_dict(save_path_aws)
+    
 
         save_path_aws = '/'.join(base_path.split('/')[-2:])
         aws.upload(base_path,save_path_aws)
