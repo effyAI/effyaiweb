@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
+from .utils import AwsBackNFro
 
 class Audio_split():
     def splitter(self, audio_path, out_path, split_sec = 8) -> str:
@@ -70,8 +71,10 @@ class TestMain():
         import so_vits_svc_fork.preprocessing.preprocess_resample 
         import so_vits_svc_fork.preprocessing.preprocess_split 
         import so_vits_svc_fork.train
+       
 
-    def preprocess(self, base_path):
+    def preprocess_n_train(self, base_path, epochs=1000, eval_interval=500):
+
         from so_vits_svc_fork.preprocessing.preprocess_resample import (
             preprocess_resample,
         )
@@ -104,8 +107,6 @@ class TestMain():
 
         shutil.copy(os.path.join(base_path,'configs/44k/config.json'), os.path.join(base_path,'logs/44k/config.json'))
 
-    def train(self, base_path, epochs=1000, eval_interval=500):
-
         from so_vits_svc_fork.train import train
 
         print("In train", base_path,"logs/44k/config.json")
@@ -130,6 +131,12 @@ class TestMain():
             if file.endswith('.pth'):
                 shutil.copy(os.path.join(BASE_PTH_FILE_PATH,file), os.path.join(base_path,'logs/44k/'))
         train(config_path, os.path.join(base_path,"logs/44k"), prog_file)
+
+        # Upload to aws s3
+        aws = AwsBackNFro()
+
+        save_path_aws = '/'.join(base_path.split('/')[-2:])
+        aws.upload(base_path,save_path_aws)
     
     
     def infer(self):

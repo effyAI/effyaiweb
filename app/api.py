@@ -11,6 +11,8 @@ import  time
 import torch
 import shutil
 from pathlib import Path
+from threading import Thread
+from src.utils import AwsBackNFro
 
 app = Flask(__name__)
 api = Api(app)
@@ -25,15 +27,6 @@ def get_optimal_device(index: int = 0) -> torch.device:
         return torch.device(f"cuda:{index % torch.cuda.device_count()}")
     elif torch.backends.mps.is_available():
         return torch.device("mps")
-    else:
-        try:
-            import torch_xla.core.xla_model as xm  # noqa
-
-            if xm.xrt_world_size() > 0:
-                return torch.device("xla")
-            # return xm.xla_device()
-        except ImportError:
-            pass
     return torch.device("cpu")
 
 class CloneAudio(Resource):
@@ -77,15 +70,17 @@ class CloneAudio(Resource):
             print("Traning Will start Shortly")
 
         svc = TestMain()
-        svc.preprocess(base_path=BASE_PROJECT_FOLDER)
+        # svc.preprocess(base_path=BASE_PROJECT_FOLDER)
         EPOCH = 1000
-        svc.train(epochs=EPOCH, base_path=BASE_PROJECT_FOLDER)
+
+        #starting thread for training
+        Thread(target=svc.preprocess_n_train, args=(BASE_PROJECT_FOLDER,EPOCH,500)).start()
 
         g_path = os.getcwd()+'/logs/44k/G_{}.pth'.format(EPOCH)
         c_path = os.getcwd()+'/logs/44k/config.json'
-        return ({"Sucess": "Trained Sucess Fully",
-                 "g_path": g_path,
-                 "c_path": c_path}, 200)
+        return ({"Sucess": "Training Started!",
+                 "user_id": user_id,
+                 "project_id": project_id}, 200)
 
     def get(self):
         print(request.data)
@@ -142,12 +137,23 @@ class InferAudio(Resource):
 
 class ProgressStats(Resource):
     def get(self):
-        prog_file = os.getcwd()+'/'+'train_progress.json' 
-        with open(prog_file) as f:
-            a = json.load(f)
-            if a['Progress'] == 99:
-                a['Progress']+=1
-            return a
+
+        req_data = json.loads(request.data.decode('utf-8'))
+        user_id = str(req_data['user_id'])
+        project_id = str(req_data['project_id'])
+
+        BASE_PROJECT_FOLDER = os.path.join(BASE_DATA_FOLDER,user_id,project_id)
+
+        try:
+            prog_file = os.path.join(BASE_PROJECT_FOLDER, 'train_progress.json') 
+            with open(prog_file) as f:
+                a = json.load(f)
+                if a['Progress'] == 99:
+                    a['Progress']+=1
+                return a
+        except:
+            return {"Progress":0}
+            
 
 api.add_resource(InferAudio, '/infer/')
 api.add_resource(CloneAudio, '/clone/')
