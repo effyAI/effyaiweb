@@ -1,3 +1,9 @@
 venv
 # app/src/pretrained_models/*
 *.__pycache__
+__pycache__
+__pycache__/
+ssl-certi
+api-dev/effyaiweb/app/__pycache__
+/home/ubuntu/api-dev/effyaiweb/app/__pycache__
+.vscode
