@@ -7,3 +7,5 @@ ssl-certi
 api-dev/effyaiweb/app/__pycache__
 /home/ubuntu/api-dev/effyaiweb/app/__pycache__
 .vscode
+app/__pycache__/app.cpython-310.pyc
+
