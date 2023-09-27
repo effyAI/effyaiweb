@@ -67,6 +67,7 @@ def align_face(filepath, predictor):
         return 'No Face Found'
 
     lm_chin = lm[0: 17]  # left-right
+    print(lm_chin)
     lm_eyebrow_left = lm[17: 22]  # left-right
     lm_eyebrow_right = lm[22: 27]  # left-right
     lm_nose = lm[27: 31]  # top-down

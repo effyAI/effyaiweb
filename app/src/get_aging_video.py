@@ -79,9 +79,11 @@ def age_input(input1, input2, input3, input4):
     if response.status_code == 200:
         # Open the image using PIL (Python Imaging Library)
         img = Image.open(BytesIO(response.content)).convert("RGB")
+        print(f"Image Shape: {img.size[0]}x{img.size[1]} pixels")
         # Save the image locally
         img.save('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
         print("Image downloaded and saved as 'downloaded_image.jpg'")
+        print('Image Size: ', os.path.getsize('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg'))
     else:
         print("Failed to download the image. Status code:", response.status_code)
         return {'error': 404}
@@ -91,6 +93,8 @@ def age_input(input1, input2, input3, input4):
     # image_path = arg1 # Input Path
     # original_image = Image.open(image_path).convert("RGB") # Input Path
     original_image.resize((256, 256))
+
+    print('image resized...')
 
     def run_alignment(image_path):
         import dlib
