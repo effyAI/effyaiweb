@@ -1,0 +1,4 @@
+500 - server error
+403 - value error
+404 - internal error
+405 - face error
