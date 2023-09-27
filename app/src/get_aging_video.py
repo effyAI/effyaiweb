@@ -74,19 +74,20 @@ def age_input(input1, input2, input3, input4):
     try:
         response = requests.get(input_url)
     except:
+        print('Invalid URL Response')
         return {'error': 404}
     if response.status_code == 200:
         # Open the image using PIL (Python Imaging Library)
         img = Image.open(BytesIO(response.content)).convert("RGB")
         # Save the image locally
-        img.save('/home/ubuntu/effyaiweb/app/src/input/downloaded_image.jpg')
+        img.save('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
         print("Image downloaded and saved as 'downloaded_image.jpg'")
     else:
         print("Failed to download the image. Status code:", response.status_code)
         return {'error': 404}
 
     original_image = Image.open(
-        'effyaiweb/app/src/input/downloaded_image.jpg').convert("RGB")  # Input URL
+        '/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg').convert("RGB")  # Input URL
     # image_path = arg1 # Input Path
     # original_image = Image.open(image_path).convert("RGB") # Input Path
     original_image.resize((256, 256))
@@ -95,7 +96,7 @@ def age_input(input1, input2, input3, input4):
         import dlib
         from .scripts.align_all_parallel import align_face
         predictor = dlib.shape_predictor(
-            "effyaiweb/app/src/shape_predictor_68_face_landmarks.dat")
+            "/home/ubuntu/development/effyaiweb/app/src/shape_predictor_68_face_landmarks.dat")
         aligned_image = align_face(filepath=image_path, predictor=predictor)
         if isinstance(aligned_image, str) and aligned_image == 'No Face Found':
             print('No Face Found')
@@ -104,7 +105,7 @@ def age_input(input1, input2, input3, input4):
         return aligned_image
 
     aligned_image = run_alignment(
-        'effyaiweb/app/src/input/downloaded_image.jpg')  # Input URL
+        '/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')  # Input URL
     if isinstance(aligned_image, str) and aligned_image == 'No Face Found':
         return {'error': 405}
     # aligned_image = run_alignment(image_path) # Input Path
@@ -130,7 +131,7 @@ def age_input(input1, input2, input3, input4):
     # Video Options
     # image_folder = '/home/ubuntu/stylegan/sam_ready/SAM/output'
     # image_list = os.listdir(image_folder)
-    video_name = f"{os.getcwd()}/effyaiweb/app/src/output_video/generated_output.mp4"
+    video_name = f"{os.getcwd()}/src/output_video/generated_output.mp4"
     fps = 6  # You can adjust the frame rate as needed.
     frame_size = (1024, 1024)  # Set the width and height of the frames.
     # You can change the codec as needed.
@@ -164,7 +165,7 @@ def age_input(input1, input2, input3, input4):
     # mp4 to h264 conversion
     input_file = video_name  # Replace with the path to your input MP4 file
     # Output h264 path
-    output_file = f'{os.getcwd()}/effyaiweb/app/src/output_video/output.mp4'
+    output_file = f'{os.getcwd()}/src/output_video/output.mp4'
     command = ['ffmpeg', '-i', input_file, '-c:v', 'libx264',
                output_file]  # Run FFmpeg command using subprocess
     subprocess.call(command)
@@ -177,8 +178,8 @@ def age_input(input1, input2, input3, input4):
     res_url = upload_image_to_s3('AKIAVZBVXJWJLAWNRCWZ', 'SzjAgZQBhe7oPaQfqNgkWAe34aAHnBrd9CD1Kbjx',
                                  'ap-southeast-1', 'effy-bandhan', s3_vid_name, output_file)
 
-    os.unlink('/home/ubuntu/effyaiweb/app/src/input/downloaded_image.jpg')
+    os.unlink('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
     os.unlink(video_name)
     os.unlink(output_file)
 
-    return res_url
+    return {'s3_output': res_url}

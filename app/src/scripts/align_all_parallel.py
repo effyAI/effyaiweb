@@ -13,7 +13,6 @@ requirements:
 	# download face landmark model from:
 	# http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2
 """
-from paths_config import model_paths
 from argparse import ArgumentParser
 import time
 import numpy as np
@@ -26,6 +25,7 @@ import dlib
 import multiprocessing as mp
 import math
 import sys
+from src.configs.paths_config import model_paths
 sys.path.append('/home/ubuntu/effyaiweb/app/src/configs')
 SHAPE_PREDICTOR_PATH = model_paths["shape_predictor"]
 

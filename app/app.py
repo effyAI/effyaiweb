@@ -8,7 +8,7 @@ import torch
 from argparse import Namespace
 
 # Model Loading
-model_path = "effyaiweb/app/src/pretrained_models/sam_ffhq_aging.pt"
+model_path = "/home/ubuntu/development/effyaiweb/app/src/pretrained_models/sam_ffhq_aging.pt"
 if not os.path.exists(model_path):
     print('Download pretained model and save it in "app/src/pretained_models" dir or if already downloaded then save the model path correctly')
 ckpt = torch.load(model_path, map_location='cpu')
@@ -17,6 +17,7 @@ pprint.pprint(opts)
 opts['checkpoint_path'] = model_path
 opts = Namespace(**opts)
 net = pSp(opts)
+print('Model is loaded...')
 
 
 app = Flask(__name__)
@@ -61,7 +62,7 @@ def get_video():
     print("API called.")
     try:
         input = request.get_json()
-        print(input)
+        # print(input)
     except Exception as e:
         print("Post data reading error:",e) # Send error to server
         return {"error":403}
@@ -69,13 +70,18 @@ def get_video():
     
     current_age = int(input.get("currentAge"))
     retirement_age = int(input.get("retirementAge"))
-    corpusGoal = float(input.get("corpusGoal"))
-    interestRate = float(input.get("interestRate"))
+    # corpusGoal = float(input.get("corpusGoal"))
+    # interestRate = float(input.get("interestRate"))
     s3_image_path = str(input.get("s3_image_path")) 
 
-    
-    res = age_input(s3_image_path, net, current_age, retirement_age)
-    return {'s3_output': res}
+    print(s3_image_path)
+
+    try:
+        res = age_input(s3_image_path, net, current_age, retirement_age)
+        print(res)
+    except:
+        return {'error': 404}
+    return res
 
 
 

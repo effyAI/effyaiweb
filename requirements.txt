@@ -15,3 +15,5 @@ tensorboard
 torch
 torchvision
 tqdm
+flask_cors
+ninja

@@ -1,4 +1,10 @@
-face_aging_ai
+venv
+/home/ubuntu/development/effyaiweb/venv
 .history
 app/src/pretrained_models
 *.__pycache__
+/home/ubuntu/development/effyaiweb/app/__pycache__
+/home/ubuntu/development/effyaiweb/app/src/__pycache__
+/home/ubuntu/development/effyaiweb/app/src/configs/__pycache__
+/home/ubuntu/development/effyaiweb/app/src/datasets/__pycache__
+/home/ubuntu/development/effyaiweb/app/src/models/__pycache__
