@@ -34,7 +34,7 @@ def hello():
 
 @app.route('/calculate_it', methods=['POST'])
 def calculate_it():
-    print("API called.")
+    print("Starting Calculate_it...")
     try:
         input = request.get_json()
         print(input)
@@ -59,7 +59,7 @@ def calculate_it():
 
 @app.route('/get_video', methods=['POST'])
 def get_video():
-    print("API called.")
+    print("Starting the face aging...")
     try:
         input = request.get_json()
         # print(input)
@@ -80,6 +80,7 @@ def get_video():
         res = age_input(s3_image_path, net, current_age, retirement_age)
         print(res)
     except:
+        print('exceptional error...')
         return {'error': 404}
     return res
 
