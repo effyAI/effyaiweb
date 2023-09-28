@@ -6,11 +6,13 @@ from .database import upload_image_to_s3
 from .models.psp import pSp
 from .utils.common import tensor2im
 from .datasets.augmentations import AgeTransformer
+from .scripts.align_all_parallel import align_face
 from argparse import Namespace
 import os
 import sys
 import pprint
 import numpy as np
+import time
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
@@ -32,6 +34,8 @@ def age_input(input1, input2, input3, input4):
     # arg2 = sys.argv[2] # Output Dir
     # arg3 = int(sys.argv[3]) # Current Age
     # arg4 = int(sys.argv[4]) # Required Age
+
+    start_time = time.time()
 
     arg1 = input1
     net = input2
@@ -97,11 +101,16 @@ def age_input(input1, input2, input3, input4):
     print('image resized...')
 
     def run_alignment(image_path):
+        print('starting face detection')
         import dlib
-        from .scripts.align_all_parallel import align_face
         predictor = dlib.shape_predictor(
             "/home/ubuntu/development/effyaiweb/app/src/shape_predictor_68_face_landmarks.dat")
-        aligned_image = align_face(filepath=image_path, predictor=predictor)
+        mediapipe = True # True: MediaPipe and False: dlib
+        if mediapipe:
+            aligned_image = align_face(filepath=image_path, predictor=predictor, dlib=False)
+        else:
+            aligned_image = align_face(filepath=image_path, predictor=predictor, dlib=True)
+
         if isinstance(aligned_image, str) and aligned_image == 'No Face Found':
             print('No Face Found')
             return 'No Face Found'
@@ -128,17 +137,14 @@ def age_input(input1, input2, input3, input4):
     age_transformers = [AgeTransformer(target_age=age) for age in target_ages]
 
     # for each age transformed age, we'll concatenate the results to display them side-by-side
-    results = np.array(aligned_image.resize((1024, 1024)))
-    count = 0
-    result_images = []
+    # results = np.array(aligned_image.resize((1024, 1024)))
+    # count = 0
+    # result_images = []
 
-    # Video Options
-    # image_folder = '/home/ubuntu/stylegan/sam_ready/SAM/output'
-    # image_list = os.listdir(image_folder)
+    
     video_name = f"{os.getcwd()}/src/output_video/generated_output.mp4"
     fps = 6  # You can adjust the frame rate as needed.
     frame_size = (1024, 1024)  # Set the width and height of the frames.
-    # You can change the codec as needed.
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_name, fourcc, fps, frame_size)
 
@@ -159,7 +165,7 @@ def age_input(input1, input2, input3, input4):
             # image = cv2.imdecode(np.array(result_image), flags=cv2.IMREAD_COLOR)
             # result_image_rgb = cv2.cvtColor(np.array(result_image), cv2.COLOR_BGR2RGB)
             out.write(cv2.cvtColor(np.array(result_image), cv2.COLOR_BGR2RGB))
-            count += 1
+            # count += 1
 
     out.release()
     cv2.destroyAllWindows()
@@ -185,5 +191,7 @@ def age_input(input1, input2, input3, input4):
     os.unlink('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
     os.unlink(video_name)
     os.unlink(output_file)
+
+    print(f'Total time taken: {time.time() - start_time}')
 
     return {'s3_output': res_url}
