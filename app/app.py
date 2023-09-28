@@ -76,6 +76,9 @@ def get_video():
 
     print(s3_image_path)
 
+    # res = age_input(s3_image_path, net, current_age, retirement_age)
+    # print(res)
+
     try:
         res = age_input(s3_image_path, net, current_age, retirement_age)
         print(res)

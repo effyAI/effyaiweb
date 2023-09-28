@@ -19,6 +19,7 @@ import numpy as np
 import PIL
 import PIL.Image
 import os
+print(os.getcwd())
 import scipy
 import scipy.ndimage
 import dlib
@@ -26,6 +27,7 @@ import multiprocessing as mp
 import math
 import sys
 from src.configs.paths_config import model_paths
+from .mediapipe_landmark import get_landmarks
 sys.path.append('/home/ubuntu/effyaiweb/app/src/configs')
 SHAPE_PREDICTOR_PATH = model_paths["shape_predictor"]
 
@@ -43,6 +45,7 @@ def get_landmark(filepath, predictor):
 
     for k, d in enumerate(dets):
         shape = predictor(img, d)
+        print(shape)
 
     if not shape:
         return 'No Face Found'
@@ -56,32 +59,54 @@ def get_landmark(filepath, predictor):
     return lm
 
 
-def align_face(filepath, predictor):
+def align_face(filepath, predictor=None, dlib=False):
+    print('starting mediapipe')
     """
     :param filepath: str
     :return: PIL Image
     """
 
-    lm = get_landmark(filepath, predictor)
-    if isinstance(lm, str) and lm == 'No Face Found':
-        return 'No Face Found'
+    # # MediaPipe Face Landmarks
+    # # mp_left_eye = [33, 160, 159, 158, 157, 173, 133, 155, 154, 153, 145, 144, 163, 7]
+    # # mp_right_eye = [362, 398, 384, 385, 386, 387, 388, 466, 263, 249, 390, 373, 477, 37, 380, 381, 382, 362]
+    # # mp_outer_mouth = [6, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146]
+    # # # Final Landmarks
+    # # mp_left_eye = [33, 160, 157, 133, 153, 163]
+    # # mp_right_eye = [362, 384, 387, 263, 373, 381]
+    # # mp_outer_mouth = [6, 40,  37, 0, 267, 270, 291, 321, 314, 17, 84, 91]
 
-    lm_chin = lm[0: 17]  # left-right
-    print(lm_chin)
-    lm_eyebrow_left = lm[17: 22]  # left-right
-    lm_eyebrow_right = lm[22: 27]  # left-right
-    lm_nose = lm[27: 31]  # top-down
-    lm_nostrils = lm[31: 36]  # top-down
-    lm_eye_left = lm[36: 42]  # left-clockwise
-    lm_eye_right = lm[42: 48]  # left-clockwise
-    lm_mouth_outer = lm[48: 60]  # left-clockwise
-    lm_mouth_inner = lm[60: 68]  # left-clockwise
+    
+    if dlib: # For dlib
+        lm = get_landmark(filepath, predictor)
+        if isinstance(lm, str) and lm == 'No Face Found':
+            return 'No Face Found'
+
+        lm_chin = lm[0: 17]  # left-right
+        print(lm_chin)
+        lm_eyebrow_left = lm[17: 22]  # left-right
+        lm_eyebrow_right = lm[22: 27]  # left-right
+        lm_nose = lm[27: 31]  # top-down
+        lm_nostrils = lm[31: 36]  # top-down
+        lm_eye_left = lm[36: 42]  # left-clockwise
+        lm_eye_right = lm[42: 48]  # left-clockwise
+        lm_mouth_outer = lm[48: 60]  # left-clockwise
+        lm_mouth_inner = lm[60: 68]  # left-clockwise
+        print(lm_eye_left, lm_eye_right, lm_mouth_outer)
+    else: # For Mediapipe
+        res = get_landmarks(filepath)
+        if isinstance(res, str) and res == 'No Face Found':
+            return 'No Face Found'
+        lm_eye_left = np.array(res[0])
+        lm_eye_right = np.array(res[1])
+        lm_mouth_outer = np.array(res[2])
+        print(lm_eye_left, lm_eye_right, lm_mouth_outer)
 
     # Calculate auxiliary vectors.
     eye_left = np.mean(lm_eye_left, axis=0)
     eye_right = np.mean(lm_eye_right, axis=0)
     eye_avg = (eye_left + eye_right) * 0.5
     eye_to_eye = eye_right - eye_left
+    print(type(lm_mouth_outer[0]), lm_mouth_outer[0])
     mouth_left = lm_mouth_outer[0]
     mouth_right = lm_mouth_outer[6]
     mouth_avg = (mouth_left + mouth_right) * 0.5
@@ -108,7 +133,8 @@ def align_face(filepath, predictor):
     if shrink > 1:
         rsize = (int(np.rint(float(img.size[0]) / shrink)),
                  int(np.rint(float(img.size[1]) / shrink)))
-        img = img.resize(rsize, PIL.Image.ANTIALIAS)
+        # img = img.resize(rsize, PIL.Image.ANTIALIAS) # For dlib face detection
+        img = img.resize(rsize, PIL.Image.Resampling.LANCZOS)
         quad /= shrink
         qsize /= shrink
 
