@@ -10,4 +10,4 @@ __pycache__/
 /home/ubuntu/development/effyaiweb/app/src/configs/__pycache__
 /home/ubuntu/development/effyaiweb/app/src/datasets/__pycache__
 /home/ubuntu/development/effyaiweb/app/src/models/__pycache__
-/home/ubuntu/development/effyaiweb/app/error-logs/*
+app/error-logs/*
