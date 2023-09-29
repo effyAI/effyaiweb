@@ -19,7 +19,7 @@ import numpy as np
 import PIL
 import PIL.Image
 import os
-print(os.getcwd())
+# print(os.getcwd())
 import scipy
 import scipy.ndimage
 import dlib

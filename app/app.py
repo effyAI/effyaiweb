@@ -6,6 +6,7 @@ import os
 import pprint
 import torch
 from argparse import Namespace
+import uuid
 
 # Model Loading
 model_path = "/home/ubuntu/development/effyaiweb/app/src/pretrained_models/sam_ffhq_aging.pt"
@@ -13,7 +14,7 @@ if not os.path.exists(model_path):
     print('Download pretained model and save it in "app/src/pretained_models" dir or if already downloaded then save the model path correctly')
 ckpt = torch.load(model_path, map_location='cpu')
 opts = ckpt['opts']
-pprint.pprint(opts)
+# pprint.pprint(opts)
 opts['checkpoint_path'] = model_path
 opts = Namespace(**opts)
 net = pSp(opts)
@@ -76,15 +77,18 @@ def get_video():
 
     print(s3_image_path)
 
-    # res = age_input(s3_image_path, net, current_age, retirement_age)
-    # print(res)
+    # UUID generation
+    uuid1 = uuid.uuid1()
 
-    try:
-        res = age_input(s3_image_path, net, current_age, retirement_age)
-        print(res)
-    except:
-        print('exceptional error...')
-        return {'error': 404}
+    res = age_input(s3_image_path, net, current_age, retirement_age, uuid1)
+    print(res)
+
+    # try:
+    #     res = age_input(s3_image_path, net, current_age, retirement_age)
+    #     print(res)
+    # except:
+    #     print('exceptional error...')
+    #     return {'error': 404}
     return res
 
 
@@ -119,4 +123,4 @@ def calculation(currentAge,retirementAge,corpusGoal,interestRate):
         
         
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
