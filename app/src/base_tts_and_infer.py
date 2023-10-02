@@ -69,7 +69,7 @@ class AudioAPI:
 def gen_audio(text):
     api_key = '9TR3ykPcWb7zo6vUMpXqv3Q4SQIt4ZLa7nVWLCLI'
     format = "wav"
-    voice = "prabhat"
+    voice = "nitesh"
     script = text
 
     def show_progress(progress_data):

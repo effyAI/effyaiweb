@@ -8,3 +8,18 @@ so-vits-svc-fork
 Flask
 flask-restful
 boto3
+
+
+# Req. for ai_dub
+
+setuptools
+wheel
+torch --index-url https://download.pytorch.org/whl/cu118
+torchaudio --index-url https://download.pytorch.org/whl/cu118
+so-vits-svc-fork
+Flask
+flask-restful
+boto3
+googletrans-py
+git+https://github.com/openai/whisper.git
+pandas

@@ -12,61 +12,65 @@ import torch
 import shutil
 from pathlib import Path
 from threading import Thread
-from src.utils import AwsBackNFro
+from src.utils import AwsBackNFro, get_optimal_device, vid_to_aud
+from src.stt_tts import TranslateFull
 
 app = Flask(__name__)
 api = Api(app)
 
 
+#configs
 BASE_DATA_FOLDER = os.path.join(Path(os.getcwd()).parent.absolute(),'data')
-
 remove_file_list = ['configs', 'dataset', 'dataset_raw', 'filelists', 'logs', 'res']
+DEVICE = get_optimal_device()
 
-def get_optimal_device(index: int = 0) -> torch.device:
-    if torch.cuda.is_available():
-        return torch.device(f"cuda:{index % torch.cuda.device_count()}")
-    elif torch.backends.mps.is_available():
-        return torch.device("mps")
-    return torch.device("cpu")
-
-class CloneAudio(Resource):
+class DubNow(Resource):
     def post(self):
-        # print(request.files['source_wav_file'].filename)
+
+        if 'video' not in request.files:
+            return ({"Error": "Please Provide Video File"}, 400)
         if 'user_id' not in request.form:
             return ({"Error": "Please Provide User ID"}, 400)
         if 'project_id' not in request.form:
             return ({"Error": "Please Provide Project ID"}, 400)
-        if 'source_wav_file' not in request.files:
-            return ({"Error": "Please Provide Source wav file ID"}, 400)
-        
+        if 'language' not in request.form:
+            return ({"Error": "Please Provide Language"}, 400)
+
+        video_file = request.files['video']
+        video_file_name = video_file.filename
         user_id = request.form['user_id']
         project_id = request.form['project_id']
+        language = request.form['language']
+
+        # Base project folder
 
         BASE_PROJECT_FOLDER = os.path.join(BASE_DATA_FOLDER,user_id,project_id)
-
-        for rmf in remove_file_list:
-            # print(rmf, os.path.join(BASE_PROJECT_FOLDER,rmf))
-            if os.path.exists(os.path.join(BASE_PROJECT_FOLDER,rmf)):
-                print('[+] Cleaning - {}'.format(os.path.join(BASE_PROJECT_FOLDER,rmf)))
-                if rmf.endswith('.json'):
-                    os.remove(os.path.join(BASE_PROJECT_FOLDER,rmf))
-                else:
-                    shutil.rmtree(os.path.join(BASE_PROJECT_FOLDER,rmf))
+        if os.path.exists(BASE_PROJECT_FOLDER):
+            shutil.rmtree(BASE_PROJECT_FOLDER)
+        if not os.path.exists(BASE_PROJECT_FOLDER):
+            os.makedirs(BASE_PROJECT_FOLDER)
         
-
-        BASE_CLONE_FOLDER = os.path.join(BASE_PROJECT_FOLDER,'VoiceToClone')
-        if not os.path.exists(BASE_CLONE_FOLDER):
-            os.makedirs(BASE_CLONE_FOLDER)
-
-        save_path = "{}/Testaudio.wav".format(BASE_CLONE_FOLDER)
-        request.files['source_wav_file'].save(save_path)
+        #save video file
+        save_vid_folder = "input_video"
+        save_vid_path = os.path.join(BASE_PROJECT_FOLDER, save_vid_folder)
+        if not os.path.exists(save_vid_path):
+            os.makedirs(save_vid_path)
         
-        print(user_id)
-        
-        ## spliting and training in on voice
+        save_vid_path = os.path.join(save_vid_path, video_file_name)
+        request.files['video'].save(os.path.join(save_vid_path))
+
+        # converted video to audio
+        save_audio_folder = "input_audio"
+        save_audio_path = os.path.join(BASE_PROJECT_FOLDER, save_audio_folder)
+        if not os.path.exists(save_audio_path):
+            os.makedirs(save_audio_path)
+        vid_to_aud(save_vid_path, save_audio_path)
+        save_audio_path_file = os.path.join(save_audio_path, 'audio.wav')
+
         spl_au = Audio_split()
 
-        resp = spl_au.splitter(audio_path=save_path, out_path=BASE_PROJECT_FOLDER, split_sec=8)
+        BASE_VOICE_CLONE_FOLDER = os.path.join(BASE_PROJECT_FOLDER, 'voice_cloning')
+        resp = spl_au.splitter(audio_path=save_audio_path_file, out_path=BASE_VOICE_CLONE_FOLDER, split_sec=8)
         if resp['status'] == 0:
             return (resp['reason'], 400) 
         if resp['status'] == 1:
@@ -77,75 +81,80 @@ class CloneAudio(Resource):
         EPOCH = 1000
 
         #starting thread for training
-        Thread(target=svc.preprocess_n_train, args=(BASE_PROJECT_FOLDER,EPOCH,500)).start()
+        Thread(target=svc.preprocess_n_train, args=(BASE_VOICE_CLONE_FOLDER,EPOCH,500)).start()
 
-        g_path = os.getcwd()+'/logs/44k/G_{}.pth'.format(EPOCH)
-        c_path = os.getcwd()+'/logs/44k/config.json'
-        return ({"Sucess": "Training Started!",
+
+
+        tranF = TranslateFull()
+
+        # tranF.stt_whisper
+        stt_folder = os.path.join(BASE_PROJECT_FOLDER, 'stt')
+        if not os.path.exists(stt_folder):
+            os.makedirs(stt_folder)
+        tranF.stt_whisper(save_audio_path_file,stt_folder)
+
+        # tranF.translate
+        stt_txt_folder = os.path.join(stt_folder,'transcript.txt')
+        translate_folder = os.path.join(BASE_PROJECT_FOLDER, 'translate')
+        if not os.path.exists(translate_folder):
+            os.makedirs(translate_folder)
+        tranF.translate(stt_txt_folder,translate_folder, language)
+
+        # tranF.tts_narket
+        translate_txt_folder = os.path.join(translate_folder,'translated.txt')
+        tts_folder = os.path.join(BASE_PROJECT_FOLDER, 'tts')
+        if not os.path.exists(tts_folder):
+            os.makedirs(tts_folder)
+        base_main_audio_path = tranF.tts_narket(translate_txt_folder,tts_folder)
+
+        print("base_main_audio_path",base_main_audio_path)
+        
+        # if not os.path.exists(os.path.join(BASE_PROJECT_FOLDER,'audio_infer.json')):
+        #     with open(os.path.join(BASE_PROJECT_FOLDER,'audio_infer.json'), 'w') as f:
+        #         json.dump({"audio_path":base_main_audio_path}, f)
+
+        # svc.infer(base_audio_path=base_main_audio_path, BASE_PROJECT_FOLDER=BASE_PROJECT_FOLDER)
+
+        return ({"status": 1,
                  "user_id": user_id,
                  "project_id": project_id}, 200)
 
-    def get(self):
-        print(request.data)
-
-class InferAudio(Resource):
+class InfefDub(Resource):
     def post(self):
-        req_data = json.loads(request.data.decode('utf-8'))
+        if 'user_id' not in request.form:
+            return ({"Error": "Please Provide User ID"}, 400)
+        if 'project_id' not in request.form:
+            return ({"Error": "Please Provide Project ID"}, 400)
 
-        text = req_data['text']
-        user_id = req_data['user_id']
-        project_id = req_data['project_id']
+        user_id = request.form['user_id']
+        project_id = request.form['project_id']
 
         BASE_PROJECT_FOLDER = os.path.join(BASE_DATA_FOLDER,user_id,project_id)
+        BASE_PROJECT_FOLDER_CLONE = os.path.join(BASE_DATA_FOLDER,user_id,project_id, 'voice_cloning')
 
-        base_aud_path = gen_audio(text=text)
+        with open(os.path.join(BASE_PROJECT_FOLDER_CLONE, 'train_progress.json')) as f:
+            a = json.load(f)
+            if a['Progress'] < 99:
+                return ({"model_training":1},200)
 
-        conv_path = os.path.join(BASE_PROJECT_FOLDER,'res')
-        if not os.path.exists(conv_path):
-            os.makedirs(conv_path)
+        source_wav = os.path.join(BASE_PROJECT_FOLDER,'tts','audio.wav')
 
-        res_file = os.path.join(conv_path,'test_{}.wav'.format(time.strftime("%d_%m_%Y_%H_%M_%S")))
-        # subprocess.call(['svc', 'infer', '-m', g_path ,'-c' ,c_path, base_aud_path, '-o',res_file])
-        g_path = Path(BASE_PROJECT_FOLDER) / "logs" / "44k"
-        if g_path.is_dir():
-            g_path = list(
-                sorted(g_path.glob("G_*.pth"), key=lambda x: x.stat().st_mtime)
-            )[-1]
-        c_path = Path(BASE_PROJECT_FOLDER) / "logs" / "44k" / "config.json"
-        infer(
-            # paths
-            input_path=base_aud_path,
-            output_path=res_file,
-            model_path=g_path,
-            config_path=c_path,
-            recursive=False,
-            # svc config
-            speaker=str,
-            cluster_model_path=None,
-            transpose=0,
-            auto_predict_f0=True,
-            cluster_infer_ratio=0,
-            noise_scale=0.4,
-            f0_method="dio",
-            # slice config
-            db_thresh = -20,
-            pad_seconds = 0.5,
-            chunk_seconds = 0.5,
-            absolute_thresh=False,
-            max_chunk_seconds=40,
-            device=get_optimal_device(),
-        )
+        svc = TestMain()
+        output = svc.infer(base_audio_path=source_wav, BASE_PROJECT_FOLDER=BASE_PROJECT_FOLDER_CLONE)
+        return (output, 200)
 
-        return ({"file_path": res_file}, 200)
-
-class ProgressStats(Resource):
+class TrainProgress(Resource):
     def get(self):
-
+        # if 'user_id' not in request.data:
+        #     return ({"Error": "Please Provide User ID"}, 400)
+        # if 'project_id' not in request.data:
+        #     return ({"Error": "Please Provide Project ID"}, 400)
+        
         req_data = json.loads(request.data.decode('utf-8'))
         user_id = str(req_data['user_id'])
         project_id = str(req_data['project_id'])
 
-        BASE_PROJECT_FOLDER = os.path.join(BASE_DATA_FOLDER,user_id,project_id)
+        BASE_PROJECT_FOLDER = os.path.join(BASE_DATA_FOLDER,user_id,project_id, 'voice_cloning')
 
         try:
             prog_file = os.path.join(BASE_PROJECT_FOLDER, 'train_progress.json') 
@@ -156,11 +165,13 @@ class ProgressStats(Resource):
                 return a
         except:
             return {"Progress":0}
-            
 
-api.add_resource(InferAudio, '/infer/')
-api.add_resource(CloneAudio, '/clone/')
-api.add_resource(ProgressStats, '/progress/')
+api.add_resource(DubNow, '/dubnow')
+api.add_resource(InfefDub, '/infer_dub')
+api.add_resource(TrainProgress, '/train_progress')
+
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=8099)
+
+        
