@@ -59,7 +59,7 @@ class ExtractAudios(Resource):
         for subdir, dirs, files in os.walk(out_vocal_aud_path):
             for file in files:
                 full_path = os.path.join(subdir, file)
-                out_audio_files[file] = full_path
+                out_audio_files[file.split('.')[0]] = full_path
             
         # print(out_audio_files)
 
