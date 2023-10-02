@@ -150,8 +150,9 @@ def age_input(input1, input2, input3, input4, input5):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_name, fourcc, fps, frame_size)
 
+    print('Starting Age Transformation...')
     for age_transformer in age_transformers:
-        print(f"Running on target age: {age_transformer.target_age}")
+        # print(f"Running on target age: {age_transformer.target_age}")
         with torch.no_grad():
             input_image_age = [age_transformer(input_image.cpu()).to('cuda')]
             input_image_age = torch.stack(input_image_age)
@@ -193,7 +194,7 @@ def age_input(input1, input2, input3, input4, input5):
     os.unlink(downloaded_img_path)
     os.unlink(video_name)
     os.unlink(output_file)
-
+    del net
     print(f'Total time taken: {time.time() - start_time}')
 
     return {'s3_output': res_url}

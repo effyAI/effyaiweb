@@ -80,15 +80,17 @@ def get_video():
     # UUID generation
     uuid1 = uuid.uuid1()
 
-    res = age_input(s3_image_path, net, current_age, retirement_age, uuid1)
-    print(res)
+    # res = age_input(s3_image_path, net, current_age, retirement_age, uuid1)
+    # print(res)
+    # torch.cuda.empty_cache() 
 
-    # try:
-    #     res = age_input(s3_image_path, net, current_age, retirement_age)
-    #     print(res)
-    # except:
-    #     print('exceptional error...')
-    #     return {'error': 404}
+    try:
+        res = age_input(s3_image_path, net, current_age, retirement_age, uuid1)
+        print(res)
+        # torch.cuda.empty_cache() 
+    except Exception as e:
+        print('exceptional error...', e)
+        return {'error': 404}
     return res
 
 
