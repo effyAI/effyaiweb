@@ -7,3 +7,4 @@ torchaudio --index-url https://download.pytorch.org/whl/cu118
 so-vits-svc-fork
 Flask
 flask-restful
+boto3
