@@ -31,15 +31,15 @@ sudo apt-get install supervisor
 sudo nano /etc/supervisor/conf.d/effyaiweb.conf
 ```
 ```
-[program:myapp]
-command=/path/to/your/virtualenv/bin/gunicorn -w 3 -b 0.0.0.0:8000 your_app_module:app
-directory=/path/to/your/app
-user=your_username
+[program:effyaiweb]
+command=/home/ubuntu/development/effyaiweb/venv/bin/gunicorn -w 3 -b 0.0.0.0:8000 app:app
+directory=/home/ubuntu/development/effyaiweb/app
+user=ubuntu
 autostart=true
 autorestart=true
 redirect_stderr=true
-stderr_logfile=/var/log/hello_world/hello_world.err.log
-stdout_logfile=/var/log/hello_world/hello_world.out.log
+stderr_logfile=/home/ubuntu/development/effyaiweb/app/error-logs/gunicorn.err.log
+stdout_logfile=/home/ubuntu/development/effyaiweb/app/error-logs/gunicorn.out.log
 ```
 To Start/Update
 ```
