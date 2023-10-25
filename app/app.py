@@ -6,6 +6,7 @@ import os
 import pprint
 import torch
 from argparse import Namespace
+import uuid
 
 # Model Loading
 model_path = "/home/ubuntu/development/effyaiweb/app/src/pretrained_models/sam_ffhq_aging.pt"
@@ -79,14 +80,19 @@ def get_video():
 
     print(s3_image_path)
 
-    # res = age_input(s3_image_path, net, current_age, retirement_age)
+    # UUID generation
+    uuid1 = uuid.uuid1()
+
+    # res = age_input(s3_image_path, net, current_age, retirement_age, uuid1)
     # print(res)
+    # torch.cuda.empty_cache() 
 
     try:
-        res = age_input(s3_image_path, net, current_age, retirement_age)
+        res = age_input(s3_image_path, net, current_age, retirement_age, uuid1)
         print(res)
+        # torch.cuda.empty_cache() 
     except Exception as e:
-        print('exceptional error... ', e)
+        print('exceptional error...', e)
         return {'error': 404}
     return res
 
@@ -122,4 +128,4 @@ def calculation(currentAge,retirementAge,corpusGoal,interestRate):
         
         
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

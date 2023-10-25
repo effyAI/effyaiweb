@@ -2,7 +2,9 @@ venv
 /home/ubuntu/development/effyaiweb/venv
 .history
 app/src/pretrained_models
+__pycache__/
 *.__pycache__
+**/__pycache__/
 /home/ubuntu/development/effyaiweb/app/__pycache__
 /home/ubuntu/development/effyaiweb/app/src/__pycache__
 /home/ubuntu/development/effyaiweb/app/src/configs/__pycache__

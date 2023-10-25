@@ -25,7 +25,7 @@ sys.path.append("..")
 # Video Conversion
 
 
-def age_input(input1, input2, input3, input4):
+def age_input(input1, input2, input3, input4, input5):
     # if len(sys.argv) != 5:
     #     print(f'current len of agruments: {len(sys.argv)}')
     #     print("Usage: python script.py Input_path Output_Dir Current_Age Require_Age")
@@ -41,6 +41,7 @@ def age_input(input1, input2, input3, input4):
     net = input2
     arg3 = input3
     arg4 = input4
+    uuid1 = input5
 
     print(os.getcwd())
 
@@ -75,6 +76,7 @@ def age_input(input1, input2, input3, input4):
 
     # Download Image from URL
     input_url = arg1  # Input Image
+    downloaded_img_path = f'/home/ubuntu/development/effyaiweb/app/src/input/{uuid1}.jpg'
     try:
         response = requests.get(input_url)
     except:
@@ -85,15 +87,15 @@ def age_input(input1, input2, input3, input4):
         img = Image.open(BytesIO(response.content)).convert("RGB")
         print(f"Image Shape: {img.size[0]}x{img.size[1]} pixels")
         # Save the image locally
-        img.save('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
-        print("Image downloaded and saved as 'downloaded_image.jpg'")
-        print('Image Size: ', os.path.getsize('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg'))
+        img.save(downloaded_img_path)
+        print(f"Image downloaded and saved as '{uuid}.jpg'")
+        print('Image Size: ', os.path.getsize(downloaded_img_path))
     else:
         print("Failed to download the image. Status code:", response.status_code)
         return {'error': 404}
 
     original_image = Image.open(
-        '/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg').convert("RGB")  # Input URL
+        downloaded_img_path).convert("RGB")  # Input URL
     # image_path = arg1 # Input Path
     # original_image = Image.open(image_path).convert("RGB") # Input Path
     original_image.resize((256, 256))
@@ -112,13 +114,13 @@ def age_input(input1, input2, input3, input4):
             aligned_image = align_face(filepath=image_path, predictor=predictor, dlib=True)
 
         if isinstance(aligned_image, str) and aligned_image == 'No Face Found':
+            os.unlink(downloaded_img_path)
             print('No Face Found')
             return 'No Face Found'
         print("Aligned image has shape: {}".format(aligned_image.size))
         return aligned_image
 
-    aligned_image = run_alignment(
-        '/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')  # Input URL
+    aligned_image = run_alignment(downloaded_img_path)  # Input URL
     if isinstance(aligned_image, str) and aligned_image == 'No Face Found':
         return {'error': 405}
     # aligned_image = run_alignment(image_path) # Input Path
@@ -142,7 +144,7 @@ def age_input(input1, input2, input3, input4):
     # result_images = []
 
     
-    video_name = f"{os.getcwd()}/src/output_video/generated_output.mp4"
+    video_name = f"{os.getcwd()}/src/output_video/generated_output_{uuid1}.mp4"
     fps = 6  # You can adjust the frame rate as needed.
     frame_size = (1024, 1024)  # Set the width and height of the frames.
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -176,7 +178,7 @@ def age_input(input1, input2, input3, input4):
     # mp4 to h264 conversion
     input_file = video_name  # Replace with the path to your input MP4 file
     # Output h264 path
-    output_file = f'{os.getcwd()}/src/output_video/output.mp4'
+    output_file = f'{os.getcwd()}/src/output_video/output_{uuid1}.mp4'
     command = ['ffmpeg', '-i', input_file, '-c:v', 'libx264',
                output_file]  # Run FFmpeg command using subprocess
     subprocess.call(command)
@@ -186,17 +188,17 @@ def age_input(input1, input2, input3, input4):
     #     subprocess.run(command, stdout=null_device, stderr=null_device)
 
     # UUID generation
-    uuid1 = uuid.uuid1()
+    # uuid1 = uuid.uuid1()
     s3_vid_name = f'{uuid1}.mp4'
 
     # upload to s3
     res_url = upload_image_to_s3('AKIAVZBVXJWJLAWNRCWZ', 'SzjAgZQBhe7oPaQfqNgkWAe34aAHnBrd9CD1Kbjx',
                                  'ap-southeast-1', 'effy-bandhan', s3_vid_name, output_file)
 
-    os.unlink('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
+    os.unlink(downloaded_img_path)
     os.unlink(video_name)
     os.unlink(output_file)
-    torch.cuda.empty_cache() 
+    del net
     print(f'Total time taken: {time.time() - start_time}')
 
     return {'s3_output': res_url}
