@@ -50,7 +50,7 @@ sudo supervisorctl status
 ```
 To Stop
 ```
-sudo supervisorctl stop
+sudo supervisorctl stop all
 ```
 or
 ```
