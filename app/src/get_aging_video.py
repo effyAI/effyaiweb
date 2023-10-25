@@ -148,8 +148,9 @@ def age_input(input1, input2, input3, input4):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_name, fourcc, fps, frame_size)
 
+    print('Starting age transformation...')
     for age_transformer in age_transformers:
-        print(f"Running on target age: {age_transformer.target_age}")
+        # print(f"Running on target age: {age_transformer.target_age}")
         with torch.no_grad():
             input_image_age = [age_transformer(input_image.cpu()).to('cuda')]
             input_image_age = torch.stack(input_image_age)
@@ -180,6 +181,10 @@ def age_input(input1, input2, input3, input4):
                output_file]  # Run FFmpeg command using subprocess
     subprocess.call(command)
 
+    # # Run the ffmpeg command without logging output to the terminal
+    # with open(subprocess.DEVNULL, 'w') as null_device:
+    #     subprocess.run(command, stdout=null_device, stderr=null_device)
+
     # UUID generation
     uuid1 = uuid.uuid1()
     s3_vid_name = f'{uuid1}.mp4'
@@ -191,7 +196,7 @@ def age_input(input1, input2, input3, input4):
     os.unlink('/home/ubuntu/development/effyaiweb/app/src/input/downloaded_image.jpg')
     os.unlink(video_name)
     os.unlink(output_file)
-
+    torch.cuda.empty_cache() 
     print(f'Total time taken: {time.time() - start_time}')
 
     return {'s3_output': res_url}

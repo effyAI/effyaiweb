@@ -99,14 +99,14 @@ def align_face(filepath, predictor=None, dlib=False):
         lm_eye_left = np.array(res[0])
         lm_eye_right = np.array(res[1])
         lm_mouth_outer = np.array(res[2])
-        print(lm_eye_left, lm_eye_right, lm_mouth_outer)
+        # print(lm_eye_left, lm_eye_right, lm_mouth_outer)
 
     # Calculate auxiliary vectors.
     eye_left = np.mean(lm_eye_left, axis=0)
     eye_right = np.mean(lm_eye_right, axis=0)
     eye_avg = (eye_left + eye_right) * 0.5
     eye_to_eye = eye_right - eye_left
-    print(type(lm_mouth_outer[0]), lm_mouth_outer[0])
+    # print(type(lm_mouth_outer[0]), lm_mouth_outer[0])
     mouth_left = lm_mouth_outer[0]
     mouth_right = lm_mouth_outer[6]
     mouth_avg = (mouth_left + mouth_right) * 0.5

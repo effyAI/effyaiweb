@@ -13,7 +13,7 @@ if not os.path.exists(model_path):
     print('Download pretained model and save it in "app/src/pretained_models" dir or if already downloaded then save the model path correctly')
 ckpt = torch.load(model_path, map_location='cpu')
 opts = ckpt['opts']
-pprint.pprint(opts)
+# pprint.pprint(opts)
 opts['checkpoint_path'] = model_path
 opts = Namespace(**opts)
 net = pSp(opts)
@@ -34,12 +34,15 @@ def hello():
 
 @app.route('/calculate_it', methods=['POST'])
 def calculate_it():
+
+    app.logger.info('This is an access log message.')
+
     print("Starting Calculate_it...")
     try:
         input = request.get_json()
         print(input)
     except Exception as e:
-        print("Post data reading error:",e) # Send error to server
+        #print("Post data reading error:",e) # Send error to server
         return {"error":403}
     
     currentAge = int(input.get("currentAge"))
@@ -53,7 +56,7 @@ def calculate_it():
         "monthly sip": RoundMonthlySIP,
         "closing balances": closingBalances
     }
-    print(response_data)
+    #print(response_data)
     return response_data
            
 
@@ -82,8 +85,8 @@ def get_video():
     try:
         res = age_input(s3_image_path, net, current_age, retirement_age)
         print(res)
-    except:
-        print('exceptional error...')
+    except Exception as e:
+        print('exceptional error... ', e)
         return {'error': 404}
     return res
 

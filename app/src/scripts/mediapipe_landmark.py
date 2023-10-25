@@ -36,7 +36,7 @@ mp_outer_mouth = [185, 40,  37, 0, 267, 270, 291, 321, 314, 17, 84, 91]
 
 
 def get_landmarks(image_path):
-    print('starting landmarks generation')
+    # print('starting landmarks generation')
     # STEP 1: Import the necessary modules.
 
     # STEP 2: Create an FaceLandmarker object.
