@@ -1,1 +1,4 @@
-venv
+# lvdm
+app/src/lvdm/models/*
+app/src/lvdm/results/*
+app/src/lvdm/logs/*
